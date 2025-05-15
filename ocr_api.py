@@ -2,15 +2,15 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from paddleocr import PaddleOCR
 from faster_whisper import WhisperModel
-from PIL import Image
-import numpy as np
 import cv2
+import numpy as np
+from PIL import Image
+import tempfile
 import io
-tempfile
 
 app = FastAPI()
 
-# 允許跨域請求（給 Streamlit 用）
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,11 +19,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 初始化 OCR & Whisper 模型
+# 初始化模型
 ocr_model = PaddleOCR(use_angle_cls=True, lang='ch')
 whisper_model = WhisperModel("tiny", device="cpu", compute_type="int8")
 
-# ----------- OCR 路由（改為接收 UploadFile） -----------
+# ----------- OCR Endpoint -----------
 @app.post("/ocr")
 async def ocr_endpoint(file: UploadFile = File(...)):
     try:
@@ -36,7 +36,7 @@ async def ocr_endpoint(file: UploadFile = File(...)):
     except Exception as e:
         return {"error": str(e)}
 
-# ----------- Whisper 語音辨識路由 -----------
+# ----------- Whisper 語音辨識 Endpoint -----------
 @app.post("/whisper")
 async def whisper_endpoint(file: UploadFile = File(...)):
     try:
