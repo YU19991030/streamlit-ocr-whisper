@@ -23,7 +23,7 @@ app.add_middleware(
 
 # 初始化 PaddleOCR & Whisper 模型
 ocr_model = PaddleOCR(use_angle_cls=True, lang='ch')
-whisper_model = WhisperModel("base", device="cpu", compute_type="float32")
+whisper_model = WhisperModel("tiny", device="cpu", compute_type="int8")
 
 # ----------- OCR 路由 -----------
 class OCRRequest(BaseModel):
