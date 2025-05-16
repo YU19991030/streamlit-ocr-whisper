@@ -30,11 +30,13 @@ async def ocr_endpoint(file: UploadFile = File(...)):
     try:
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
+        print(f"📸 圖片大小：{image.size}")  # ✅ Debug：確認有圖
         img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
         result = ocr_model.ocr(img, cls=True)
         text = "\n".join([line[1][0] for box in result for line in box])
         return {"text": text}
     except Exception as e:
+        print("❌ OCR 錯誤：", e)  # ✅ 顯示錯誤細節
         return {"error": str(e)}
 
 # ✅ Whisper API：語音辨識
