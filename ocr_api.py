@@ -4,41 +4,40 @@ from paddleocr import PaddleOCR
 from faster_whisper import WhisperModel
 from PIL import Image
 import numpy as np
-import cv2
 import io
+import cv2
 import tempfile
 import os
 
 app = FastAPI()
 
-# 啟用 CORS（允許前端跨域連線）
+# CORS 支援（讓 Streamlit 前端可跨網域連線）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 可依需求調整為前端網址
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 初始化 PaddleOCR（Mobile 模型）與 Whisper（tiny）
-ocr_model = PaddleOCR(use_angle_cls=True, lang='ch')  # 自動會抓 mobile 模型
+# 初始化模型
+ocr_model = PaddleOCR(use_angle_cls=True, lang='ch')  # Mobile 模型已內建
 whisper_model = WhisperModel("tiny", device="cpu", compute_type="int8")
 
-# ----------- 名片 OCR 路由 -----------
+# ✅ OCR API：圖片辨識
 @app.post("/ocr")
 async def ocr_endpoint(file: UploadFile = File(...)):
     try:
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
         img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-
         result = ocr_model.ocr(img, cls=True)
         text = "\n".join([line[1][0] for box in result for line in box])
         return {"text": text}
     except Exception as e:
         return {"error": str(e)}
 
-# ----------- Whisper 語音辨識路由 -----------
+# ✅ Whisper API：語音辨識
 @app.post("/whisper")
 async def whisper_endpoint(file: UploadFile = File(...)):
     try:
@@ -55,7 +54,7 @@ async def whisper_endpoint(file: UploadFile = File(...)):
     except Exception as e:
         return {"error": str(e)}
 
-# ----------- Render 專用啟動入口 -----------
+# ✅ 讓 Render 正常綁定 port
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
